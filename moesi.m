@@ -65,18 +65,14 @@ type
       H_Exclusive,
       H_Owned,
       --transient states during recall
-      HT_S_D, 
-      HT_M_D, 
-      HT_M_P, 
-      HT_M_A,
-      HT_M_AD,
+      HT_S_D,
+      HT_M_P,
       HT_S_P, 
       HT_I_P, 
       HT_E_P,
       HT_O_D,
       HT_O_P,
-      HT_M_waitAckCount,
-      HT_M_A_waitAckCount
+      HT_M_waitAckCount
       };
       owner: Node;	
       sharers: multiset [ProcCount] of Node;
@@ -185,7 +181,7 @@ Begin
   then
    if n != rqst
     then
-    Send(Inv, n, rqst, VC1, UNDEFINED, UNDEFINED); put "Send Inv to "; put n;put "\n";
+    Send(Inv, n, rqst, VC1, UNDEFINED, UNDEFINED); --put "Send Inv to "; --put n;--put "\n";
    endif;
   endif;
  endfor;
@@ -193,38 +189,38 @@ End;
 
 Procedure print();
 Begin
-put "---------------------------------\n";
-put HomeNode.state;
+--put "---------------------------------\n";
+--put HomeNode.state;
 for n:Proc do
-put Procs[n].state;
+--put Procs[n].state;
 endfor;
 for n:Proc do
-put MultiSetCount(i:HomeNode.sharers, HomeNode.sharers[i] = n);
-put " ";
+--put MultiSetCount(i:HomeNode.sharers, HomeNode.sharers[i] = n);
+--put " ";
 endfor;
-put "\n";
+--put "\n";
 End;
 
 Procedure print2();
 Begin
-put HomeNode.state;
+--put HomeNode.state;
 for n:Proc do
-put Procs[n].state;
+--put Procs[n].state;
 endfor;
 for n:Proc do
-put MultiSetCount(i:HomeNode.sharers, HomeNode.sharers[i] = n);
-put " ";
+--put MultiSetCount(i:HomeNode.sharers, HomeNode.sharers[i] = n);
+--put " ";
 endfor;
-put "\n=================================\n";
+--put "\n=================================\n";
 End;
 
 
 Procedure HomeReceive(msg:Message);
 var cnt:-ProcCount..ProcCount; -- for counting sharers
 Begin
-put "Home Receiving "; put msg.mtype; put " from "; put msg.src; put " on VC"; put msg.vc;
-put "\n home --    "; put HomeNode.state;
- cnt := MultiSetCount(i:HomeNode.sharers, true);put cnt;
+--put "Home Receiving "; --put msg.mtype; --put " from "; --put msg.src; --put " on VC"; --put msg.vc;
+--put "\n home --    "; --put HomeNode.state;
+ cnt := MultiSetCount(i:HomeNode.sharers, true);--put cnt;
  msg_processed := true;
 
 switch HomeNode.state
@@ -236,21 +232,21 @@ case H_Invalid:
 
     case GetS:
       HomeNode.state := H_Exclusive;
-      Send(ExData, msg.src, HomeType, VC0, HomeNode.val, 0); put "Send GetData to "; put msg.src;put " ack=0\n";
+      Send(ExData, msg.src, HomeType, VC0, HomeNode.val, 0); --put "Send GetData to "; --put msg.src;--put " ack=0\n";
       HomeNode.owner := msg.src;
     case GetM:
-      HomeNode.state := H_Modified;
+      HomeNode.state := HT_M_waitAckCount;
       RemoveAllSharersList();
       HomeNode.owner := msg.src;
       Assert (!IsUndefined(HomeNode.val)) "homenode.val is undefined";
-      Send(GetData, msg.src, HomeType, VC0, HomeNode.val, cnt); put "Send GetData to "; put msg.src;put " ack="; put cnt;put "\n";
+      Send(GetData, msg.src, HomeType, VC0, HomeNode.val, cnt); --put "Send GetData to "; --put msg.src;--put " ack="; --put cnt;--put "\n";
     case PutS:
-      Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); put "Send Put_Ack to "; put msg.src;put "\n";
+      Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); --put "Send Put_Ack to "; --put msg.src;--put "\n";
       HomeNode.state := HT_I_P;
     case PutM:
       if(msg.src != HomeNode.owner)
       then
-        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); put "Send Put_Ack to "; put msg.src;put "\n";
+        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); --put "Send Put_Ack to "; --put msg.src;--put "\n";
         HomeNode.state := HT_I_P;
       else
         ErrorUnhandledMsg(msg, HomeType);
@@ -258,7 +254,7 @@ case H_Invalid:
     case PutE:
       if(msg.src != HomeNode.owner)
       then
-        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); put "Send Put_Ack to "; put msg.src;put "\n";
+        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); --put "Send Put_Ack to "; --put msg.src;--put "\n";
         HomeNode.state := HT_I_P;
         else
         ErrorUnhandledMsg(msg, HomeType);
@@ -266,7 +262,7 @@ case H_Invalid:
     case PutO:
       if(msg.src != HomeNode.owner)
       then
-        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); put "Send Put_Ack to "; put msg.src;put "\n";
+        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); --put "Send Put_Ack to "; --put msg.src;--put "\n";
         HomeNode.state := HT_I_P;
       else
         ErrorUnhandledMsg(msg, HomeType);
@@ -282,33 +278,19 @@ case H_Shared:
     switch msg.mtype
     case GetS:
     Assert (!IsUndefined(HomeNode.val)) "homenode.val is undefined";
-      Send(GetData, msg.src, HomeType, VC0, HomeNode.val, 0); put "Send GetData to "; put msg.src;put " ack=0\n";
+      Send(GetData, msg.src, HomeType, VC0, HomeNode.val, 0); --put "Send GetData to "; --put msg.src;--put " ack=0\n";
       AddToSharersList(msg.src);
     case GetM:
       HomeNode.owner := msg.src;
       if(IsSharer(msg.src))
       then
       Assert (!IsUndefined(HomeNode.val)) "homenode.val is undefined";
-        Send(GetData, msg.src, HomeType, VC0, HomeNode.val, cnt-1); put "Send GetData to "; put msg.src;put " ack="; put cnt-1;put "\n";
-        if(cnt = 1)
-        then
-            HomeNode.state := H_Modified;
-            RemoveAllSharersList();
-        else
-            HomeNode.state := HT_M_A;
-            undefine HomeNode.ack;
-        endif;
+        Send(GetData, msg.src, HomeType, VC0, HomeNode.val, cnt-1); --put "Send GetData to "; --put msg.src;--put " ack="; --put cnt-1;--put "\n";
+        HomeNode.state := HT_M_waitAckCount;
       else
       Assert (!IsUndefined(HomeNode.val)) "homenode.val is undefined";
-      Send(GetData, msg.src, HomeType, VC0, HomeNode.val, cnt); put "Send GetData to "; put msg.src;put " ack="; put cnt;put "\n";
-        if(cnt = 0)
-        then
-            HomeNode.state := H_Modified;
-            RemoveAllSharersList();
-        else
-            HomeNode.state := HT_M_A;
-            undefine HomeNode.ack;
-        endif;
+      Send(GetData, msg.src, HomeType, VC0, HomeNode.val, cnt); --put "Send GetData to "; --put msg.src;--put " ack="; --put cnt;--put "\n";
+        HomeNode.state := HT_M_waitAckCount;
       endif;
       SendInvReqToSharers(msg.src);
       RemoveFromSharersList(msg.src);
@@ -316,7 +298,7 @@ case H_Shared:
       if(IsSharer(msg.src))
       then
         RemoveFromSharersList(msg.src);
-        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); put "Send Put_Ack to "; put msg.src;put "\n";
+        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); --put "Send Put_Ack to "; --put msg.src;--put "\n";
         if(MultiSetCount(i:HomeNode.sharers, HomeNode.sharers[i] = msg.src) = 1) --last in list
         then
             HomeNode.state := HT_I_P;
@@ -324,7 +306,7 @@ case H_Shared:
             HomeNode.state := HT_S_P;
         endif;
       else
-        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); put "Send Put_Ack to "; put msg.src;put "\n";
+        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); --put "Send Put_Ack to "; --put msg.src;--put "\n";
         if(MultiSetCount(i:HomeNode.sharers, HomeNode.sharers[i] = msg.src) = 1) --last in list
         then
             HomeNode.state := HT_I_P;
@@ -336,7 +318,7 @@ case H_Shared:
       if(msg.src != HomeNode.owner)
       then
         RemoveFromSharersList(msg.src);
-        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); put "Send Put_Ack to "; put msg.src;put "\n";
+        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); --put "Send Put_Ack to "; --put msg.src;--put "\n";
         HomeNode.state := HT_S_P;
       else
         ErrorUnhandledMsg(msg, HomeType);
@@ -345,7 +327,7 @@ case H_Shared:
       if(msg.src != HomeNode.owner)
       then
         RemoveFromSharersList(msg.src);
-        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); put "Send Put_Ack to "; put msg.src;put "\n";
+        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); --put "Send Put_Ack to "; --put msg.src;--put "\n";
         HomeNode.state := HT_S_P;
       else
         ErrorUnhandledMsg(msg, HomeType);
@@ -354,7 +336,7 @@ case H_Shared:
       if(msg.src != HomeNode.owner)
       then
         RemoveFromSharersList(msg.src);
-        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); put "Send Put_Ack to "; put msg.src;put "\n";
+        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); --put "Send Put_Ack to "; --put msg.src;--put "\n";
         HomeNode.state := HT_S_P;
       else
         ErrorUnhandledMsg(msg, HomeType);
@@ -371,35 +353,35 @@ Assert (IsUndefined(HomeNode.owner) = false)
     switch msg.mtype
         case GetS:
         Assert (HomeNode.owner != msg.src) "owner = msg.src";
-            Send(Fwd_GetS, HomeNode.owner, msg.src, VC1, UNDEFINED, UNDEFINED); put "Send Fwd_GetS to "; put HomeNode.owner;
+            Send(Fwd_GetS, HomeNode.owner, msg.src, VC1, UNDEFINED, UNDEFINED); --put "Send Fwd_GetS to "; --put HomeNode.owner;
             AddToSharersList(msg.src);                           --Add request to sharers
             --AddToSharersList(HomeNode.owner);
             RemoveFromSharersList(HomeNode.owner);               --Remove owner from sharers 
             --undefine HomeNode.owner;      
             HomeNode.state := HT_O_D;                            --change state to HT_S_D
         case GetM:
-            Send(Fwd_GetM, HomeNode.owner, msg.src, VC1, UNDEFINED, 0); put "Send Fwd_GetM to "; put HomeNode.owner;
+            Send(Fwd_GetM, HomeNode.owner, msg.src, VC1, UNDEFINED, 0); --put "Send Fwd_GetM to "; --put HomeNode.owner;
             HomeNode.owner := msg.src;
-            HomeNode.state := HT_M_D;
+            HomeNode.state := HT_M_waitAckCount;
         case PutS:
-            Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); put "Send Put_Ack to "; put msg.src;put "\n";
+            Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); --put "Send Put_Ack to "; --put msg.src;--put "\n";
             HomeNode.state := HT_E_P;
         case PutM:
-            Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); put "Send Put_Ack to "; put msg.src;put "\n";
+            Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); --put "Send Put_Ack to "; --put msg.src;--put "\n";
             if(msg.src = HomeNode.owner)
             then
                 Assert (!IsUnDefined(HomeNode.owner)) "owner undefined";
                 HomeNode.state := HT_I_P;                       --change state to H_Invalid
                 HomeNode.val := msg.val;                           --write data to memory
                 LastWrite := HomeNode.val;
-                put "LastWrite changes to "; put LastWrite; put "\n";
+                --put "LastWrite changes to "; --put LastWrite; --put "\n";
                 undefine HomeNode.owner;                           --undefine owner
                 --RemoveAllSharersList();
             else
                 HomeNode.state := HT_E_P;
             endif;
         case PutE:
-            Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); put "Send Put_Ack to "; put msg.src;put "\n";
+            Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); --put "Send Put_Ack to "; --put msg.src;--put "\n";
             if(msg.src = HomeNode.owner)
             then
                 Assert (!IsUnDefined(HomeNode.owner)) "owner undefined";
@@ -410,7 +392,7 @@ Assert (IsUndefined(HomeNode.owner) = false)
                 HomeNode.state := HT_E_P;
             endif;
         case PutO:
-            Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); put "Send Put_Ack to "; put msg.src;put "\n";
+            Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); --put "Send Put_Ack to "; --put msg.src;--put "\n";
             HomeNode.state := HT_E_P;
             --RemoveAllSharersList();
         else
@@ -426,21 +408,21 @@ case H_Modified:
     case GetS:
     Assert (HomeNode.owner != msg.src) "owner = msg.src";
       Send(Fwd_GetS, HomeNode.owner, msg.src, VC1, UNDEFINED, UNDEFINED); --Send Fwd_GetS to owner
-        put "Send Fwd_GetS to "; put HomeNode.owner;
+        --put "Send Fwd_GetS to "; --put HomeNode.owner;
       AddToSharersList(msg.src);                           --Add request to sharers
       RemoveFromSharersList(HomeNode.owner);               --Remove owner from sharers
       HomeNode.state := HT_O_D;                            --change state to HT_O_D
     case GetM:
-      Send(Fwd_GetM, HomeNode.owner, msg.src, VC1, UNDEFINED, 0); put "Send Fwd_GetM to "; put HomeNode.owner;
+      Send(Fwd_GetM, HomeNode.owner, msg.src, VC1, UNDEFINED, 0); --put "Send Fwd_GetM to "; --put HomeNode.owner;
       HomeNode.owner := msg.src;
-      HomeNode.state := HT_M_D;
+      HomeNode.state := HT_M_waitAckCount;
       --RemoveAllSharersList();   --remove all, in case
     case PutS:
-      Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); put "Send Put_Ack to "; put msg.src;put "\n";
+      Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); --put "Send Put_Ack to "; --put msg.src;--put "\n";
         HomeNode.state := HT_M_P;
         --RemoveAllSharersList();  --remove all, in case
     case PutM:
-      Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); put "Send Put_Ack to "; put msg.src;put "\n";
+      Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); --put "Send Put_Ack to "; --put msg.src;--put "\n";
       --RemoveAllSharersList();
       if(msg.src = HomeNode.owner)
         then
@@ -448,17 +430,17 @@ case H_Modified:
             HomeNode.state := HT_I_P;                       --change state to H_Invalid
             HomeNode.val := msg.val;                           --write data to memory
             LastWrite := HomeNode.val;
-            put "LastWrite changes to "; put LastWrite; put "\n";
+            --put "LastWrite changes to "; --put LastWrite; --put "\n";
             undefine HomeNode.owner;                           --undefine owner
       else
             HomeNode.state := HT_M_P;
       endif;
     case PutE:
-        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); put "Send Put_Ack to "; put msg.src;put "\n";
+        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); --put "Send Put_Ack to "; --put msg.src;--put "\n";
         HomeNode.state := HT_M_P;
         --RemoveAllSharersList();
     case PutO:
-        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); put "Send Put_Ack to "; put msg.src;put "\n";
+        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); --put "Send Put_Ack to "; --put msg.src;--put "\n";
         HomeNode.state := HT_M_P;
         --RemoveAllSharersList();
     else
@@ -472,24 +454,16 @@ Assert (IsUndefined(HomeNode.owner) = false)
     switch msg.mtype
     case GetS:
     Assert (HomeNode.owner != msg.src) "owner = msg.src";
-      Send(Fwd_GetS, HomeNode.owner, msg.src, VC1, UNDEFINED, UNDEFINED); put "Send Fwd_GetS to "; put HomeNode.owner;
+      Send(Fwd_GetS, HomeNode.owner, msg.src, VC1, UNDEFINED, UNDEFINED); --put "Send Fwd_GetS to "; --put HomeNode.owner;
       RemoveFromSharersList(HomeNode.owner);               --Remove owner from sharers
       AddToSharersList(msg.src);                           --Add request to sharers
       HomeNode.state := HT_O_D;                            --change state to HT_O_D
     case GetM:
       if(msg.src = HomeNode.owner) -- from owner
       then
-        Send(AckCount, msg.src, HomeType, VC0, UNDEFINED, cnt);put "Send AckCount to "; put msg.src;put " ack="; put cnt;put "\n";
+        Send(AckCount, msg.src, HomeType, VC1, UNDEFINED, cnt);--put "Send AckCount to "; --put msg.src;--put " ack="; --put cnt;--put "\n";
         SendInvReqToSharers(msg.src);
-        if(cnt = 0)
-        then
-            --HomeNode.state := H_Modified;
-            --RemoveAllSharersList();
-            HomeNode.state := HT_M_waitAckCount;
-        else
-            HomeNode.state := HT_M_A_waitAckCount;
-            undefine HomeNode.ack;
-        endif;
+        HomeNode.state := HT_M_waitAckCount;
        
         
       else --not from owner
@@ -497,65 +471,53 @@ Assert (IsUndefined(HomeNode.owner) = false)
         if(IsSharer(msg.src))
         then
         Assert(msg.src != HomeNode.owner) "msg.src = owner";
-            Send(Fwd_GetM, HomeNode.owner, msg.src, VC1, UNDEFINED, cnt-1); put "Send Fwd_GetM to "; put HomeNode.owner;put " ack="; put cnt-1;put "\n";
+            Send(Fwd_GetM, HomeNode.owner, msg.src, VC1, UNDEFINED, cnt-1); --put "Send Fwd_GetM to "; --put HomeNode.owner;--put " ack="; --put cnt-1;--put "\n";
             HomeNode.owner := msg.src;
             --RemoveAllSharersList();
-            if(cnt = 1)
-            then
-                HomeNode.state := HT_M_D;
-            else
-                HomeNode.state := HT_M_AD;
-                undefine HomeNode.ack;
-            endif;
+            HomeNode.state := HT_M_waitAckCount;
         else
         Assert(msg.src != HomeNode.owner) "msg.src = owner";
-            Send(Fwd_GetM, HomeNode.owner, msg.src, VC1, UNDEFINED, cnt); put "Send Fwd_GetM to "; put HomeNode.owner;put " ack="; put cnt;put "\n";
+            Send(Fwd_GetM, HomeNode.owner, msg.src, VC1, UNDEFINED, cnt); --put "Send Fwd_GetM to "; --put HomeNode.owner;--put " ack="; --put cnt;--put "\n";
             HomeNode.owner := msg.src;
             --RemoveAllSharersList();
-            if(cnt = 0)
-            then
-                HomeNode.state := HT_M_D;
-            else
-                HomeNode.state := HT_M_AD;
-                undefine HomeNode.ack;
-            endif;
+            HomeNode.state := HT_M_waitAckCount;
         endif;
       endif;
       
     case PutS:
         HomeNode.state := HT_O_P;
         RemoveFromSharersList(msg.src);
-        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); put "Send Put_Ack to "; put msg.src;put "\n";
+        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED); --put "Send Put_Ack to "; --put msg.src;--put "\n";
     case PutM:
         RemoveFromSharersList(msg.src);
-        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED);put "Send Put_Ack to "; put msg.src;put "\n";
+        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED);--put "Send Put_Ack to "; --put msg.src;--put "\n";
         if(msg.src = HomeNode.owner)
         then
             Assert (!IsUnDefined(HomeNode.owner)) "owner undefined";
             HomeNode.val := msg.val;                           --write data to memory
             LastWrite := HomeNode.val;
-            put "LastWrite changes to "; put LastWrite; put "\n";
+            --put "LastWrite changes to "; --put LastWrite; --put "\n";
             HomeNode.state := HT_S_P;                       --change state to HT_S_P
             undefine HomeNode.owner;                           --undefine owner
         else
             HomeNode.state := HT_O_P;
         endif;
     case PutO:
-        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED);put "Send Put_Ack to "; put msg.src;put "\n";
+        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED);--put "Send Put_Ack to "; --put msg.src;--put "\n";
         RemoveFromSharersList(msg.src);
         if(msg.src = HomeNode.owner)
         then
             Assert (!IsUnDefined(HomeNode.owner)) "owner undefined";            
             HomeNode.val := msg.val;                           --write data to memory
             LastWrite := HomeNode.val;
-            put "LastWrite changes to "; put LastWrite; put "\n";
+            --put "LastWrite changes to "; --put LastWrite; --put "\n";
             HomeNode.state := HT_S_P;                       --change state to HT_S_P
             undefine HomeNode.owner;                           --undefine owner
         else
             HomeNode.state := HT_O_P;
         endif;
     case PutE:
-        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED);put "Send Put_Ack to "; put msg.src;put "\n";
+        Send(Put_Ack, msg.src, HomeType, VC1, UNDEFINED, UNDEFINED);--put "Send Put_Ack to "; --put msg.src;--put "\n";
         HomeNode.state := HT_S_P;                       --change state to HT_S_P
         undefine HomeNode.owner;
         RemoveFromSharersList(msg.src);
@@ -571,44 +533,9 @@ case HT_S_D:
       HomeNode.state := H_Shared;
       HomeNode.val := msg.val;
       LastWrite := HomeNode.val;
-      put "LastWrite changes to"; put LastWrite; put "\n";
+      --put "LastWrite changes to"; --put LastWrite; --put "\n";
     else
-    msg_processed := false; put "store in box\n";
-    endswitch;
-
-
-case HT_M_AD:
-
-    switch msg.mtype
-    case GetData: -- it's just an ack
-        HomeNode.state := HT_M_A;
-    case Inv_Ack:
-        if(IsUndefined(HomeNode.ack))
-        then
-            HomeNode.ack := 1;
-        else
-            HomeNode.ack := HomeNode.ack + 1;
-        endif;
-        put HomeNode.ack;
-        put cnt;
-        if(HomeNode.ack = cnt)
-        then
-            HomeNode.state := HT_M_D;
-            undefine HomeNode.ack;
-        endif;
-    else
-        msg_processed := false; put "store in box\n";
-    endswitch;
-
-
-case HT_M_D:
-
-    switch msg.mtype
-    case GetData:
-        HomeNode.state := H_Modified;
-        RemoveAllSharersList();
-    else
-        msg_processed := false; put "store in box\n";
+    msg_processed := false; --put "store in box\n";
     endswitch;
 
 
@@ -619,30 +546,7 @@ case HT_M_P:
         HomeNode.state := H_Modified;
         RemoveAllSharersList();
     else
-        msg_processed := false; put "store in box\n";
-    endswitch;
-
-
-case HT_M_A:
-
-    switch msg.mtype
-    case Inv_Ack:
-        if(IsUndefined(HomeNode.ack))
-        then
-            HomeNode.ack := 1;
-        else
-            HomeNode.ack := HomeNode.ack + 1;
-        endif;
-        put HomeNode.ack;
-        put cnt;
-        if(HomeNode.ack = cnt)
-        then
-            HomeNode.state := H_Modified;
-            undefine HomeNode.ack;
-            RemoveAllSharersList();
-        endif;
-    else
-        msg_processed := false; put "store in box\n";
+        msg_processed := false; --put "store in box\n";
     endswitch;
 
 
@@ -652,7 +556,7 @@ case HT_S_P:
     case Put_Ack_Back:
         HomeNode.state := H_Shared;
     else
-        msg_processed := false; put "store in box\n";
+        msg_processed := false; --put "store in box\n";
     endswitch;
 
 
@@ -663,7 +567,7 @@ case HT_I_P:
         HomeNode.state := H_Invalid;
         RemoveAllSharersList();
     else
-        msg_processed := false; put "store in box\n";
+        msg_processed := false; --put "store in box\n";
     endswitch;
 
 
@@ -673,7 +577,7 @@ case HT_E_P:
     case Put_Ack_Back:
         HomeNode.state := H_Exclusive;
     else
-        msg_processed := false; put "store in box\n";
+        msg_processed := false; --put "store in box\n";
     endswitch;
 
 
@@ -682,7 +586,7 @@ case HT_O_D:
     case GetData:
         HomeNode.state := H_Owned;
     else
-        msg_processed := false; put "store in box\n";
+        msg_processed := false; --put "store in box\n";
     endswitch;
 
 
@@ -692,31 +596,9 @@ case HT_O_P:
     case Put_Ack_Back:
         HomeNode.state := H_Owned;
     else
-        msg_processed := false; put "store in box\n";
+        msg_processed := false; --put "store in box\n";
     endswitch;
 
-
-case HT_M_A_waitAckCount:
-    switch msg.mtype
-        case AckCount_Back:
-            HomeNode.state := HT_M_A;
-        case Inv_Ack:
-            if(IsUndefined(HomeNode.ack))
-            then
-                HomeNode.ack := 1;
-            else
-                HomeNode.ack := HomeNode.ack + 1;
-            endif;
-            put HomeNode.ack;
-            put cnt;
-            if(HomeNode.ack = cnt)
-            then
-                HomeNode.state := HT_M_waitAckCount;
-                undefine HomeNode.ack;
-            endif;
-        else
-        msg_processed := false; put "store in box\n";
-    endswitch;
 
 case HT_M_waitAckCount:
 
@@ -726,15 +608,15 @@ case HT_M_waitAckCount:
         undefine HomeNode.ack;
         RemoveAllSharersList();
     else
-        msg_processed := false; put "store in box\n";
+        msg_processed := false; --put "store in box\n";
     endswitch;
     
  endswitch;
-put HomeNode.val;
-put LastWrite; put "\n";
-put HomeNode.owner;
+--put HomeNode.val;
+--put LastWrite; --put "\n";
+--put HomeNode.owner;
 --Assert (!IsSharer(HomeNode.owner)) "owner is in share list";
-put " changes to "; put HomeNode.state;put "\n";
+--put " changes to "; --put HomeNode.state;--put "\n";
 End;
 
 
@@ -749,26 +631,26 @@ End;
 
 Procedure ProcReceive(msg:Message; p:Proc);
 Begin
-put "Proc_"; put p; put " Receiving "; put msg.mtype; put " from "; put msg.src; put " on VC"; put msg.vc; put "\n";
+--put "Proc_"; --put p; --put " Receiving "; --put msg.mtype; --put " from "; --put msg.src; --put " on VC"; --put msg.vc; --put "\n";
 
 msg_processed := true;
 alias ps:Procs[p].state do
 alias pv:Procs[p].val do
-put " Proc --    ";put ps;
+--put " Proc --    ";--put ps;
 switch ps
 
 
 case P_Invalid:
 
-    msg_processed := false; put "store in box\n";
+    msg_processed := false; --put "store in box\n";
 
 
 case P_Shared:
 
     switch msg.mtype
     case Inv:
-      Send(Inv_Ack, msg.src, p, VC0, UNDEFINED, UNDEFINED); put "Send Inv_Ack to "; put msg.src;put "\n";
-      Send(Inv_Ack, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send Inv_Ack to "; put HomeType;put "\n";
+      Send(Inv_Ack, msg.src, p, VC0, UNDEFINED, UNDEFINED); --put "Send Inv_Ack to "; --put msg.src;--put "\n";
+     -- Send(Inv_Ack, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send Inv_Ack to "; --put HomeType;--put "\n";
       ps := P_Invalid;
       undefine pv;
       undefine Procs[p].ack;
@@ -782,13 +664,13 @@ case P_Modified:
     switch msg.mtype
     case Fwd_GetS:
     Assert (!IsUndefined(pv)) "pv is undefined";
-      Send(GetData, msg.src, p, VC0, pv, UNDEFINED); put "Send GetData to "; put msg.src;put "\n";
-      Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send GetData to "; put HomeType; put "\n";
+      Send(GetData, msg.src, p, VC0, pv, UNDEFINED); --put "Send GetData to "; --put msg.src;--put "\n";
+      Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send GetData to "; --put HomeType; --put "\n";
       ps := P_Owned;
     case Fwd_GetM:
     Assert (!IsUndefined(pv)) "pv is undefined";
-      Send(GetData, msg.src, p, VC0, pv, 0); put "Send GetData to "; put msg.src;put "EEEck = 0"; put "\n";
-      Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send GetData to "; put HomeType;put "\n";
+      Send(GetData, msg.src, p, VC0, pv, 0); --put "Send GetData to "; --put msg.src;--put "EEEck = 0"; --put "\n";
+    --  Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send GetData to "; --put HomeType;--put "\n";
       ps := P_Invalid;
       undefine pv;
       undefine Procs[p].ack;
@@ -802,13 +684,13 @@ case P_Exclusive:
     switch msg.mtype
     case Fwd_GetS:
     Assert (!IsUndefined(pv)) "pv is undefined";
-      Send(GetData, msg.src, p, VC0, pv, UNDEFINED); put "Send GetData to "; put msg.src;put "\n";
-      Send(GetData, HomeType, p, VC0, pv, UNDEFINED); put "Send GetData to "; put HomeType; put "\n";
+      Send(GetData, msg.src, p, VC0, pv, UNDEFINED); --put "Send GetData to "; --put msg.src;--put "\n";
+      Send(GetData, HomeType, p, VC0, pv, UNDEFINED); --put "Send GetData to "; --put HomeType; --put "\n";
       ps := P_Owned;
     case Fwd_GetM:
     Assert (!IsUndefined(pv)) "pv is undefined";
-      Send(GetData, msg.src, p, VC0, pv, 0); put "Send GetData to "; put msg.src;put "DDDack = "; put msg.ack; put "\n";
-      Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send GetData to "; put HomeType;put "\n";
+      Send(GetData, msg.src, p, VC0, pv, 0); --put "Send GetData to "; --put msg.src;--put "DDDack = "; --put msg.ack; --put "\n";
+    --  Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send GetData to "; --put HomeType;--put "\n";
       ps := P_Invalid;
       undefine pv;
       undefine Procs[p].ack;
@@ -822,29 +704,29 @@ case P_Owned:
     switch msg.mtype
       case Fwd_GetS:
       Assert (!IsUndefined(pv)) "pv is undefined";
-      Send(GetData, msg.src, p, VC0, pv, UNDEFINED); put "Send GetData to "; put msg.src;put "\n";
-      Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send GetData to "; put HomeType;put "\n";
+      Send(GetData, msg.src, p, VC0, pv, UNDEFINED); --put "Send GetData to "; --put msg.src;--put "\n";
+      Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send GetData to "; --put HomeType;--put "\n";
       case Fwd_GetM:
       Assert (!IsUndefined(pv)) "pv is undefined";
-      Send(GetData, msg.src, p, VC0, pv, msg.ack); put "Send GetData to "; put msg.src;put "CCCack = "; put msg.ack; put "\n";
-      Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send GetData to "; put HomeType;put "\n";
+      Send(GetData, msg.src, p, VC0, pv, msg.ack); --put "Send GetData to "; --put msg.src;--put "CCCack = "; --put msg.ack; --put "\n";
+   --   Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send GetData to "; --put HomeType;--put "\n";
       ps := P_Invalid;
       undefine pv;
       undefine Procs[p].ack;
       else
-        msg_processed := false; put "store in box\n";
+        msg_processed := false; --put "store in box\n";
       endswitch;
 
 case PT_IS_D:
 
     switch msg.mtype
     case Inv:
-        msg_processed := false; put "store in box\n";
+        msg_processed := false; --put "store in box\n";
     case GetData:
         pv := msg.val;
         LastWrite := pv;
-        put "LastWrite changes to "; put LastWrite; put "\n";
-        put Procs[p].ack;
+        --put "LastWrite changes to "; --put LastWrite; --put "\n";
+        --put Procs[p].ack;
     if(IsMember(msg.src, Proc))
     then
         ps := P_Shared;
@@ -864,16 +746,16 @@ case PT_IS_D:
     endif;
     endif;
     case Fwd_GetS:
-      msg_processed := false; put "store in box\n";
+      msg_processed := false; --put "store in box\n";
     case Fwd_GetM:
-      msg_processed := false; put "store in box\n";
+      msg_processed := false; --put "store in box\n";
     case ExData:
         if(IsMember(msg.src, Home))
         then
             ps := P_Exclusive;
             pv := msg.val;
             LastWrite := pv;
-            put "LastWrite changes to "; put LastWrite; put "\n";
+            --put "LastWrite changes to "; --put LastWrite; --put "\n";
             undefine Procs[p].ack;
         else
             ErrorUnhandledMsg(msg, p);
@@ -887,21 +769,22 @@ case PT_IM_AD:
 
     switch msg.mtype
     case Fwd_GetM:
-      msg_processed := false; put "store in box\n";
+      msg_processed := false; --put "store in box\n";
     case Fwd_GetS:
-      msg_processed := false; put "store in box\n";
+      msg_processed := false; --put "store in box\n";
     case GetData:
       pv := msg.val;
       LastWrite := pv;
-      put "LastWrite changes to "; put LastWrite; put "\n";
+      --put "LastWrite changes to "; --put LastWrite; --put "\n";
       Assert (!IsUndefined(msg.ack)) "msg.ack is undefined";
-      put Procs[p].ack;
+      --put Procs[p].ack;
       if(!IsUndefined(msg.ack)) 
       then
         if(msg.ack = 0)
         then
             ps := P_Modified;
             undefine Procs[p].ack;
+            Send(AckCount_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send AckCount_Back to "; --put HomeType;
         else
             if(IsUndefined(Procs[p].ack))
             then
@@ -912,6 +795,7 @@ case PT_IM_AD:
                 then
                     ps := P_Modified;
                     undefine Procs[p].ack;
+                    Send(AckCount_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send AckCount_Back to "; --put HomeType;
                 else
                     Procs[p].ack := Procs[p].ack + msg.ack;
                     ps := PT_IM_A;
@@ -927,6 +811,7 @@ case PT_IM_AD:
         then
             ps := P_Modified;
             undefine Procs[p].ack;
+            Send(AckCount_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send AckCount_Back to "; --put HomeType;
         else
             ps := PT_OM_A;
             if(IsUndefined(Procs[p].ack))
@@ -937,6 +822,7 @@ case PT_IM_AD:
                 then
                     ps := P_Modified;
                     undefine Procs[p].ack;
+                    Send(AckCount_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send AckCount_Back to "; --put HomeType;
                 else
                     Procs[p].ack := Procs[p].ack + msg.ack;
                 endif;
@@ -949,7 +835,7 @@ case PT_IM_AD:
         else
             Procs[p].ack := Procs[p].ack - 1;
         endif;
-            put Procs[p].ack; put "\n";
+            --put Procs[p].ack; --put "\n";
 
     else
       ErrorUnhandledMsg(msg,p);
@@ -960,9 +846,9 @@ case PT_IM_A:
 
     switch msg.mtype
     case Fwd_GetM:
-      msg_processed := false; put "store in box\n";
+      msg_processed := false; --put "store in box\n";
     case Fwd_GetS:
-      msg_processed := false; put "store in box\n";
+      msg_processed := false; --put "store in box\n";
     case Inv_Ack:
     if(IsUndefined(Procs[p].ack))
     then
@@ -972,11 +858,12 @@ case PT_IM_A:
         then
             ps := P_Modified;
             undefine Procs[p].ack;
+            Send(AckCount_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send AckCount_Back to "; --put HomeType;
         else
             Procs[p].ack := Procs[p].ack - 1;
         endif;
     endif;
-    put Procs[p].ack; put "\n";
+    --put Procs[p].ack; --put "\n";
     else
         ErrorUnhandledMsg(msg, p);
     endswitch;
@@ -986,24 +873,25 @@ case PT_SM_AD:
 
     switch msg.mtype
     case Fwd_GetM:
-      msg_processed := false; put "store in box\n";
+      msg_processed := false; --put "store in box\n";
     case Fwd_GetS:
-      msg_processed := false; put "store in box\n";
+      msg_processed := false; --put "store in box\n";
     case Inv:
-      Send(Inv_Ack, msg.src, p, VC0, UNDEFINED, UNDEFINED); put "Send Inv_Ack to "; put msg.src;put "\n";
-      Send(Inv_Ack, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send Inv_Ack to "; put HomeType;put "\n";
+      Send(Inv_Ack, msg.src, p, VC0, UNDEFINED, UNDEFINED); --put "Send Inv_Ack to "; --put msg.src;--put "\n";
+    --  Send(Inv_Ack, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send Inv_Ack to "; --put HomeType;--put "\n";
       ps := PT_IM_AD;
     case GetData:
     pv := msg.val;
     LastWrite := pv;
-    put "LastWrite changes to "; put LastWrite; put "\n";
-    put Procs[p].ack;
+    --put "LastWrite changes to "; --put LastWrite; --put "\n";
+    --put Procs[p].ack;
     if(!IsUndefined(msg.ack))
     then
       if(msg.ack = 0)
       then
         ps := P_Modified;
         undefine Procs[p].ack;
+        Send(AckCount_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send AckCount_Back to "; --put HomeType;
       else        
         if(IsUndefined(Procs[p].ack))
         then
@@ -1014,12 +902,13 @@ case PT_SM_AD:
           then
             ps := P_Modified;
             undefine Procs[p].ack;
+            Send(AckCount_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send AckCount_Back to "; --put HomeType;
           else
             Procs[p].ack := Procs[p].ack + msg.ack;
             ps := PT_SM_A;
           endif;
         endif;
-        put Procs[p].ack; put "\n";
+        --put Procs[p].ack; --put "\n";
       endif;
     else
       ErrorUnhandledMsg(msg,p);
@@ -1028,10 +917,10 @@ case PT_SM_AD:
       if(IsUndefined(Procs[p].ack))
       then
         Procs[p].ack := -1;
-        put Procs[p].ack; put "\n";
+        --put Procs[p].ack; --put "\n";
       else
         Procs[p].ack := Procs[p].ack - 1;
-        put Procs[p].ack; put "\n";
+        --put Procs[p].ack; --put "\n";
       endif;
     else
       ErrorUnhandledMsg(msg,p);
@@ -1042,9 +931,9 @@ case PT_SM_A:
 
     switch msg.mtype
     case Fwd_GetS:
-      msg_processed := false; put "store in box\n";
+      msg_processed := false; --put "store in box\n";
     case Fwd_GetM:
-      msg_processed := false; put "store in box\n";
+      msg_processed := false; --put "store in box\n";
     case Inv_Ack:
     if(IsUndefined(Procs[p].ack))
     then
@@ -1054,11 +943,12 @@ case PT_SM_A:
         then
             ps := P_Modified;
             undefine Procs[p].ack;
+            Send(AckCount_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send AckCount_Back to "; --put HomeType;
         else
             Procs[p].ack := Procs[p].ack - 1;
         endif;
     endif;
-    put Procs[p].ack; put "\n";
+    --put Procs[p].ack; --put "\n";
     else
         ErrorUnhandledMsg(msg,p);
     endswitch;
@@ -1069,19 +959,19 @@ case PT_MI_A:
     switch msg.mtype
     case Fwd_GetS:
     Assert (!IsUndefined(pv)) "pv is undefined";
-      Send(GetData, msg.src, p, VC0, pv, UNDEFINED); put "Send GetData to "; put msg.src;put "\n";
-      Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send GetData to "; put HomeType;put "\n";
+      Send(GetData, msg.src, p, VC0, pv, UNDEFINED); --put "Send GetData to "; --put msg.src;--put "\n";
+      Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send GetData to "; --put HomeType;--put "\n";
       ps := PT_OI_A;
     case Fwd_GetM:
     Assert (!IsUndefined(pv)) "pv is undefined";
-      Send(GetData, msg.src, p, VC0, pv, 0); put "Send GetData to "; put msg.src;put "FFFack = 0"; put msg.ack; put "\n";
-      Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send GetData to "; put HomeType;put "\n";
+      Send(GetData, msg.src, p, VC0, pv, 0); --put "Send GetData to "; --put msg.src;--put "FFFack = 0"; --put msg.ack; --put "\n";
+    --  Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send GetData to "; --put HomeType;--put "\n";
       ps := PT_II_A;
     case Put_Ack:
       ps := P_Invalid;
       undefine pv;
       undefine Procs[p].ack;
-      Send(Put_Ack_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send Put_Ack_Back to "; put HomeType;put "\n";
+      Send(Put_Ack_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send Put_Ack_Back to "; --put HomeType;--put "\n";
     else
         ErrorUnhandledMsg(msg, p);
     endswitch;
@@ -1092,19 +982,19 @@ case PT_EI_A:
     switch msg.mtype
     case Fwd_GetS:
     Assert (!IsUndefined(pv)) "pv is undefined";
-      Send(GetData, msg.src, p, VC0, pv, UNDEFINED); put "Send GetData to "; put msg.src;put "\n";
-      Send(GetData, HomeType, p, VC0, pv, UNDEFINED); put "Send GetData to "; put HomeType;put "\n";
+      Send(GetData, msg.src, p, VC0, pv, UNDEFINED); --put "Send GetData to "; --put msg.src;--put "\n";
+      Send(GetData, HomeType, p, VC0, pv, UNDEFINED); --put "Send GetData to "; --put HomeType;--put "\n";
       ps := PT_OI_A;
     case Fwd_GetM:
     Assert (!IsUndefined(pv)) "pv is undefined";
-      Send(GetData, msg.src, p, VC0, pv, 0); put "Send GetData to "; put msg.src;put "BBBack = 0"; put msg.ack; put "\n";
-      Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send GetData to "; put HomeType;put "\n";
+      Send(GetData, msg.src, p, VC0, pv, 0); --put "Send GetData to "; --put msg.src;--put "BBBack = 0"; --put msg.ack; --put "\n";
+    --  Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send GetData to "; --put HomeType;--put "\n";
       ps := PT_II_A;
     case Put_Ack:
       ps := P_Invalid;
       undefine pv;
       undefine Procs[p].ack;
-      Send(Put_Ack_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send Put_Ack_Back to "; put HomeType;put "\n";
+      Send(Put_Ack_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send Put_Ack_Back to "; --put HomeType;--put "\n";
     else
         ErrorUnhandledMsg(msg, p);
     endswitch;
@@ -1115,21 +1005,21 @@ case PT_OM_AC:
     switch msg.mtype
       case Fwd_GetS:
         Assert (!IsUndefined(pv)) "pv is undefined";
-        Send(GetData, msg.src, p, VC0, pv, UNDEFINED); put "Send GetData to "; put msg.src;put "\n";
-        Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send GetData to "; put HomeType;put "\n";
+        Send(GetData, msg.src, p, VC0, pv, UNDEFINED); --put "Send GetData to "; --put msg.src;--put "\n";
+        Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send GetData to "; --put HomeType;--put "\n";
       case Fwd_GetM:
         Assert (!IsUndefined(pv)) "pv is undefined";
-        Send(GetData, msg.src, p, VC0, pv, msg.ack); put "Send GetData to "; put msg.src; put "AAAck = "; put msg.ack; put "\n";
-        Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send GetData to "; put HomeType;put "\n";
+        Send(GetData, msg.src, p, VC0, pv, msg.ack); --put "Send GetData to "; --put msg.src; --put "AAAck = "; --put msg.ack; --put "\n";
+     --   Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send GetData to "; --put HomeType;--put "\n";
         ps := PT_IM_AD;
       case AckCount:
         Assert (!IsUndefined(msg.ack)) "msg.ack undefined";
-        put Procs[p].ack;
+        --put Procs[p].ack;
         if(msg.ack = 0)
         then
             ps := P_Modified;
             undefine Procs[p].ack;
-            Send(AckCount_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send AckCount_Back to "; put HomeType;put "\n";
+            Send(AckCount_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send AckCount_Back to "; --put HomeType;--put "\n";
         else
             
             if(IsUndefined(Procs[p].ack))
@@ -1141,7 +1031,7 @@ case PT_OM_AC:
                 then
                     ps := P_Modified;
                     undefine Procs[p].ack;
-                    Send(AckCount_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send AckCount_Back to "; put HomeType;put "\n";
+                    Send(AckCount_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send AckCount_Back to "; --put HomeType;--put "\n";
                 else
                     Procs[p].ack := Procs[p].ack + msg.ack;
                     ps := PT_OM_A;
@@ -1151,15 +1041,16 @@ case PT_OM_AC:
       case GetData:
       pv := msg.val;
       LastWrite := pv;
-      put "LastWrite changes to "; put LastWrite; put "\n";
+      --put "LastWrite changes to "; --put LastWrite; --put "\n";
       Assert (!IsUndefined(msg.ack)) "msg.ack is undefined";
-      put Procs[p].ack;
+      --put Procs[p].ack;
       if(!IsUndefined(msg.ack)) 
       then
         if(msg.ack = 0)
         then
             ps := P_Modified;
             undefine Procs[p].ack;
+            Send(AckCount_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send AckCount_Back to "; --put HomeType;
         else
             if(IsUndefined(Procs[p].ack))
             then
@@ -1170,6 +1061,7 @@ case PT_OM_AC:
                 then
                     ps := P_Modified;
                     undefine Procs[p].ack;
+                    Send(AckCount_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send AckCount_Back to "; --put HomeType;
                 else
                     Procs[p].ack := Procs[p].ack + msg.ack;
                     ps := PT_IM_A;
@@ -1186,9 +1078,9 @@ case PT_OM_AC:
         else
             Procs[p].ack := Procs[p].ack - 1;
         endif;
-            put Procs[p].ack; put "\n";
+            --put Procs[p].ack; --put "\n";
       else
-        --msg_processed := false; put "store in box\n";
+        --msg_processed := false; --put "store in box\n";
         ErrorUnhandledMsg(msg, p);
       endswitch;
 
@@ -1199,12 +1091,12 @@ case PT_OM_A:
     switch msg.mtype
     case Fwd_GetS:
     Assert (!IsUndefined(pv)) "pv is undefined";
-      Send(GetData, msg.src, p, VC0, pv, msg.ack); put "Send GetData to "; put msg.src;put "\n";
-      Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send GetData to "; put HomeType;put "\n";
+      Send(GetData, msg.src, p, VC0, pv, msg.ack); --put "Send GetData to "; --put msg.src;--put "\n";
+      Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send GetData to "; --put HomeType;--put "\n";
     case Fwd_GetM:
       Assert (!IsUndefined(pv)) "pv is undefined";
-      Send(GetData, msg.src, p, VC0, pv, msg.ack); put "Send GetData to "; put msg.src;put "GGGack = "; put msg.ack; put "\n";
-      Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send GetData to "; put HomeType;put "\n";
+      Send(GetData, msg.src, p, VC0, pv, msg.ack); --put "Send GetData to "; --put msg.src;--put "GGGack = "; --put msg.ack; --put "\n";
+     -- Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send GetData to "; --put HomeType;--put "\n";
 
     case Inv_Ack:
     if(IsUndefined(Procs[p].ack))
@@ -1215,12 +1107,12 @@ case PT_OM_A:
         then
             ps := P_Modified;
             undefine Procs[p].ack;
-            Send(AckCount_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send AckCount_Back to "; put HomeType;put "\n";
+            Send(AckCount_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send AckCount_Back to "; --put HomeType;--put "\n";
         else
             Procs[p].ack := Procs[p].ack - 1;
         endif;
     endif;
-    put Procs[p].ack; put "\n";
+    --put Procs[p].ack; --put "\n";
     else
         ErrorUnhandledMsg(msg,p);
     endswitch;
@@ -1231,19 +1123,19 @@ case PT_OI_A:
     switch msg.mtype
     case Fwd_GetS:
     Assert (!IsUndefined(pv)) "pv is undefined";
-      Send(GetData, msg.src, p, VC0, pv, UNDEFINED); put "Send GetData to "; put msg.src;put "\n";
-      Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send GetData to "; put HomeType;put "\n";
+      Send(GetData, msg.src, p, VC0, pv, UNDEFINED); --put "Send GetData to "; --put msg.src;--put "\n";
+      Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send GetData to "; --put HomeType;--put "\n";
     case Fwd_GetM:
     Assert (!IsUndefined(pv)) "pv is undefined";
-      Send(GetData, msg.src, p, VC0, pv, msg.ack); put "Send GetData to "; put msg.src;put "AAAck = "; put msg.ack; put "\n";
-      Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send GetData to "; put HomeType;put "\n";
-      put "AAA "; put msg.ack;
+      Send(GetData, msg.src, p, VC0, pv, msg.ack); --put "Send GetData to "; --put msg.src;--put "AAAck = "; --put msg.ack; --put "\n";
+    --  Send(GetData, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send GetData to "; --put HomeType;--put "\n";
+      --put "AAA "; --put msg.ack;
       ps := PT_II_A;
     case Put_Ack:
       ps := P_Invalid;
       undefine pv;
       undefine Procs[p].ack;
-      Send(Put_Ack_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send Put_Ack_Back to "; put HomeType;put "\n";
+      Send(Put_Ack_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send Put_Ack_Back to "; --put HomeType;--put "\n";
     else
         ErrorUnhandledMsg(msg, p);
     endswitch;
@@ -1253,14 +1145,14 @@ case PT_SI_A:
 
     switch msg.mtype
     case Inv:
-      Send(Inv_Ack, msg.src, p, VC0, UNDEFINED, UNDEFINED); put "Send Inv_Ack to "; put msg.src;put "\n";
-      Send(Inv_Ack, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send Inv_Ack to "; put HomeType;put "\n";
+      Send(Inv_Ack, msg.src, p, VC0, UNDEFINED, UNDEFINED); --put "Send Inv_Ack to "; --put msg.src;--put "\n";
+  --    Send(Inv_Ack, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send Inv_Ack to "; --put HomeType;--put "\n";
       ps := PT_II_A;
     case Put_Ack:
       ps := P_Invalid;
       undefine pv;
         undefine Procs[p].ack;
-        Send(Put_Ack_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send Put_Ack_Back to "; put HomeType;put "\n";
+        Send(Put_Ack_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send Put_Ack_Back to "; --put HomeType;--put "\n";
     else
       ErrorUnhandledMsg(msg, p);
     endswitch;
@@ -1271,7 +1163,7 @@ case PT_II_A:
       ps := P_Invalid;
       undefine pv;
         undefine Procs[p].ack;
-        Send(Put_Ack_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); put "Send Put_Ack_Back to "; put HomeType;put "\n";
+        Send(Put_Ack_Back, HomeType, p, VC0, UNDEFINED, UNDEFINED); --put "Send Put_Ack_Back to "; --put HomeType;--put "\n";
     else
       ErrorUnhandledMsg(msg, p);
     endswitch;
@@ -1279,12 +1171,12 @@ case PT_II_A:
   else
     ErrorUnhandledState();
  endswitch;
-put "msg.ack = "; put msg.ack; put "\n";
-put LastWrite; put "\n";
-put "pv = "; put pv; put "\n";
-put HomeNode.val;
-put HomeNode.owner;
-put " changes to ";put ps; put "\n";
+--put "msg.ack = "; --put msg.ack; --put "\n";
+--put LastWrite; --put "\n";
+--put "pv = "; --put pv; --put "\n";
+--put HomeNode.val;
+--put HomeNode.owner;
+--put " changes to ";--put ps; --put "\n";
  endalias;
  endalias;
 End;
@@ -1302,10 +1194,10 @@ ruleset n:Proc Do
      (p.state = P_Modified)
       ==>
         p.val := v;
-        LastWrite := v; put n; put " write "; put p.val; put "\n";
-        put "LastWrite changes to "; put LastWrite; put "\n";
-        put HomeNode.val;
-        put HomeNode.owner;
+        LastWrite := v; --put n; --put " write "; --put p.val; --put "\n";
+        --put "LastWrite changes to "; --put LastWrite; --put "\n";
+        --put HomeNode.val;
+        --put HomeNode.owner;
         print2();
     endrule;
 
@@ -1313,11 +1205,11 @@ ruleset n:Proc Do
     rule "store new value when P_Shared"
      (p.state = P_Shared)
      ==>
-        print(); put " write \n";
-        Send(GetM, HomeType, n, VC2, UNDEFINED, UNDEFINED);put n; put "Send GetM to Home\n";
+        print(); --put " write \n";
+        Send(GetM, HomeType, n, VC2, UNDEFINED, UNDEFINED);--put n; --put "Send GetM to Home\n";
         p.state := PT_SM_AD;
-        put HomeNode.val;
-        put HomeNode.owner; 
+        --put HomeNode.val;
+        --put HomeNode.owner; 
         print2();
     endrule;
 
@@ -1325,11 +1217,11 @@ ruleset n:Proc Do
     rule "store new value when P_Invalid"
      (p.state = P_Invalid)
      ==>
-        print(); put n; put " write\n";
-        Send(GetM, HomeType, n, VC2, UNDEFINED, UNDEFINED); put "Send GetM to Home\n";
+        print(); --put n; --put " write\n";
+        Send(GetM, HomeType, n, VC2, UNDEFINED, UNDEFINED); --put "Send GetM to Home\n";
         p.state := PT_IM_AD;
-        put HomeNode.val;
-        put HomeNode.owner; 
+        --put HomeNode.val;
+        --put HomeNode.owner; 
         print2();
     endrule;
 
@@ -1337,10 +1229,10 @@ ruleset n:Proc Do
     rule "store new value when P_Exclusive"
     (p.state = P_Exclusive)
     ==>
-        print(); put n; put "write\n";
+        print(); --put n; --put "write\n";
         p.state := P_Modified;
-        put HomeNode.val;
-        put HomeNode.owner; 
+        --put HomeNode.val;
+        --put HomeNode.owner; 
         print2();
     endrule;
  
@@ -1348,11 +1240,11 @@ ruleset n:Proc Do
     rule "store new value when P_Owned"
     (p.state = P_Owned)
     ==>
-        print(); put n; put "write\n";
-        Send(GetM, HomeType, n, VC2, UNDEFINED, UNDEFINED); put "Send GetM to Home\n";
+        print(); --put n; --put "write\n";
+        Send(GetM, HomeType, n, VC2, UNDEFINED, UNDEFINED); --put "Send GetM to Home\n";
         p.state := PT_OM_AC;
-        put HomeNode.val;
-        put HomeNode.owner; 
+        --put HomeNode.val;
+        --put HomeNode.owner; 
         print2();
     endrule;
     
@@ -1362,11 +1254,11 @@ ruleset n:Proc Do
   rule "read request when P_Invalid"
     (p.state = P_Invalid)
     ==>
-        print();put n; put " read\n";
-        Send(GetS, HomeType, n, VC2, UNDEFINED, UNDEFINED); put "Send GetS to Home\n";
+        print();--put n; --put " read\n";
+        Send(GetS, HomeType, n, VC2, UNDEFINED, UNDEFINED); --put "Send GetS to Home\n";
         p.state := PT_IS_D;
-        put HomeNode.val;
-        put HomeNode.owner; 
+        --put HomeNode.val;
+        --put HomeNode.owner; 
         print2();
     endrule;
 
@@ -1374,11 +1266,11 @@ ruleset n:Proc Do
   rule "writeback when P_Modified"
   (p.state = P_Modified)
     ==>
-        print();put n; put " writeback\n";
-        Send(PutM, HomeType, n, VC2, p.val, UNDEFINED);put "Send PutM to Home\n";
+        print();--put n; --put " writeback\n";
+        Send(PutM, HomeType, n, VC2, p.val, UNDEFINED);--put "Send PutM to Home\n";
         p.state := PT_MI_A;
-        put HomeNode.val;
-        put HomeNode.owner; 
+        --put HomeNode.val;
+        --put HomeNode.owner; 
         print2();
     endrule;
 
@@ -1386,8 +1278,8 @@ ruleset n:Proc Do
   rule "writeback when P_Shared"
   (p.state = P_Shared)
     ==>
-        print(); put n; put " writeback\n";
-        Send(PutS, HomeType, n, VC2, UNDEFINED, UNDEFINED); put "Send PutS to Home\n";
+        print(); --put n; --put " writeback\n";
+        Send(PutS, HomeType, n, VC2, UNDEFINED, UNDEFINED); --put "Send PutS to Home\n";
         p.state := PT_SI_A;
         print2();
     endrule;
@@ -1396,8 +1288,8 @@ ruleset n:Proc Do
   rule "writeback when P_Exclusive"
   (p.state = P_Exclusive)
   ==>
-        print(); put n; put " writeback\n";
-        Send(PutE, HomeType, n, VC2, UNDEFINED, UNDEFINED); put "Send PutE to Home\n";
+        print(); --put n; --put " writeback\n";
+        Send(PutE, HomeType, n, VC2, UNDEFINED, UNDEFINED); --put "Send PutE to Home\n";
         p.state := PT_EI_A;
         print2();
     endrule;
@@ -1406,8 +1298,8 @@ ruleset n:Proc Do
   rule "writeback when P_Owned"
   (p.state = P_Owned)
   ==>
-        print();put n; put " writeback\n";
-        Send(PutO, HomeType, n, VC2, p.val, UNDEFINED); put "Send PutO to Home\n";
+        print();--put n; --put " writeback\n";
+        Send(PutO, HomeType, n, VC2, p.val, UNDEFINED); --put "Send PutO to Home\n";
         p.state := PT_OI_A;
         print2();
     endrule;
@@ -1489,7 +1381,7 @@ HomeNode.val := v;
     endfor;
 endfor;
 LastWrite := HomeNode.val;
-put "LastWrite changes to "; put LastWrite; put "\n";
+--put "LastWrite changes to "; --put LastWrite; --put "\n";
 
 -- processor initialization
 for i:Proc do
@@ -1526,6 +1418,11 @@ invariant "value in memory matches value of last write, when invalid"
     HomeNode.state = H_Invalid
     ->
     HomeNode.val = LastWrite;
+    
+invariant "value in memory matches value of last write, when owned"
+    HomeNode.state = H_Owned
+    ->
+    HomeNode.val = LastWrite;
 
 invariant "values in modified state match last write"
     Forall n : Proc Do
@@ -1537,6 +1434,13 @@ invariant "values in modified state match last write"
 invariant "values in exclusive state match last write"
     Forall n : Proc Do
     Procs[n].state = P_Exclusive
+    ->
+    Procs[n].val = LastWrite --LastWrite is updated whenever a new value is created
+    end;
+    
+invariant "values in owned state match last write"
+    Forall n : Proc Do
+    Procs[n].state = P_Owned
     ->
     Procs[n].val = LastWrite --LastWrite is updated whenever a new value is created
     end;
@@ -1573,6 +1477,13 @@ end;
 invariant "values in exlusive state match memory"
 Forall n: Proc Do
     HomeNode.state = H_Exclusive & Procs[n].state = P_Exclusive
+    ->
+    HomeNode.val = Procs[n].val
+end;
+
+invariant "values in owned state match memory"
+Forall n: Proc Do
+    HomeNode.state = H_Owned & Procs[n].state = P_Owned
     ->
     HomeNode.val = Procs[n].val
 end;
